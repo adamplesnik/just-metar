@@ -43,7 +43,7 @@ export default function MetarLookup() {
           Aerodrome ICAO code
         </label>
         <input
-          className="w-48 rounded border border-neutral-500 px-3 py-2 font-mono uppercase"
+          className="w-48 rounded border border-neutral-500 px-3 py-2 uppercase"
           value={icao}
           id="icaoCode"
           onChange={(e) => setIcao(e.target.value.toUpperCase().slice(0, 4))}
@@ -53,7 +53,7 @@ export default function MetarLookup() {
           aria-label="ICAO airport code"
         />
       </div>
-      <pre className="font-mono text-xl whitespace-pre-wrap">
+      <pre className="text-xl whitespace-pre-wrap">
         {status === "loading" && "Loading…"}
         {status === "error" && "Could not fetch METAR."}
         {status === "idle" &&
