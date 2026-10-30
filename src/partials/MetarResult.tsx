@@ -1,4 +1,5 @@
 import LoadingDots from './LoadingDots'
+import StatusText from './StatusText'
 
 export type Status = 'idle' | 'loading' | 'error'
 
@@ -12,16 +13,13 @@ export default function MetarResult({ icao, metar, status }: Props) {
   return (
     <pre className="text-xl whitespace-pre-wrap">
       {status === 'loading' && <LoadingDots />}
-      {status === 'error' && (
-        <span className="text-main-dim">Could not fetch METAR.</span>
+      {status === 'error' && <StatusText text="Could not fetch METAR." />}
+      {status === 'idle' && icao.length !== 4 && (
+        <StatusText text="METAR appears here." />
       )}
       {status === 'idle' &&
         icao.length === 4 &&
-        (metar ?? (
-          <span className="text-main-dim">
-            No METAR available for this station.
-          </span>
-        ))}
+        (metar ?? <StatusText text="No METAR available for this station." />)}
     </pre>
   )
 }
