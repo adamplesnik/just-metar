@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import StatusText from './StatusText'
 
 // cycles ".", "..", "..." while mounted
 export default function LoadingDots() {
@@ -9,5 +10,5 @@ export default function LoadingDots() {
     return () => clearInterval(tick)
   }, [])
 
-  return <span className="text-main-dim">Loading{'.'.repeat(count)}</span>
+  return <StatusText text={'Loading' + '.'.repeat(count)} />
 }

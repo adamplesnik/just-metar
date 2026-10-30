@@ -20,7 +20,7 @@ export default function Footer() {
         className="flex items-start gap-1 text-xs text-main-dim hover:text-main"
         target="blank"
       >
-        <span className="underline">GITHUB</span>
+        <span className="underline">GitHub</span>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           className="w-3.5"
