@@ -14,6 +14,14 @@ export default function IcaoInput({ value, onChange }: Props) {
         value={value}
         id="icaoCode"
         onChange={(e) => onChange(e.target.value.toUpperCase().slice(0, 4))}
+        onFocus={(e) => e.target.select()}
+        // stop the click that focused the input from collapsing the selection
+        onMouseUp={(e) => {
+          const { selectionStart, selectionEnd, value } = e.currentTarget
+          if (selectionStart === 0 && selectionEnd === value.length) {
+            e.preventDefault()
+          }
+        }}
         maxLength={4}
         spellCheck={false}
         autoComplete="off"
