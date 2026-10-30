@@ -22,3 +22,7 @@ npm run dev
 ## Deployment
 
 The Aviation Weather API does not send CORS headers, so requests go through `/api/data/metar`, which is proxied by Vite in development and by a rewrite in `vercel.json` in production. The same file sends all other paths to `index.html` so direct links like `/LZIB` work. On another host you need to set up equivalent rules.
+
+## License
+
+MIT, see [LICENSE](LICENSE).
