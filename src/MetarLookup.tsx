@@ -2,8 +2,24 @@ import { useEffect, useState } from "react";
 
 const METAR_URL = (icao: string) => `/api/data/metar?ids=${icao}&format=raw`;
 
+const STORAGE_KEY = "just-metar:recent";
+const MAX_RECENT = 3;
+
+function loadRecent(): string[] {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]");
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((c) => typeof c === "string" && /^[A-Z]{4}$/.test(c))
+      .slice(0, MAX_RECENT);
+  } catch {
+    return [];
+  }
+}
+
 export default function MetarLookup() {
-  const [icao, setIcao] = useState("");
+  const [recent, setRecent] = useState(loadRecent);
+  const [icao, setIcao] = useState(() => recent[0] ?? "");
   const [metar, setMetar] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
 
@@ -24,6 +40,20 @@ export default function MetarLookup() {
       })
       .then((text) => {
         setMetar(text.trim() || null); // empty = no METAR for this station
+        if (text.trim()) {
+          setRecent((prev) => {
+            const next = [icao, ...prev.filter((c) => c !== icao)].slice(
+              0,
+              MAX_RECENT,
+            );
+            try {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+            } catch {
+              // storage unavailable (private mode / quota): keep in memory only
+            }
+            return next;
+          });
+        }
         setStatus("idle");
       })
       .catch((err) => {
@@ -53,6 +83,20 @@ export default function MetarLookup() {
           aria-label="ICAO airport code"
         />
       </div>
+      {recent.length > 0 && (
+        <div className="flex gap-2">
+          {recent.map((code) => (
+            <button
+              key={code}
+              type="button"
+              onClick={() => setIcao(code)}
+              className="rounded border border-neutral-500 px-3 py-1 text-sm hover:bg-neutral-500/20 cursor-pointer"
+            >
+              {code}
+            </button>
+          ))}
+        </div>
+      )}
       <pre className="text-xl whitespace-pre-wrap">
         {status === "loading" && "Loading…"}
         {status === "error" && "Could not fetch METAR."}
