@@ -106,7 +106,7 @@ export default function MetarLookup() {
             ICAO code
           </label>
           <input
-            className="h-12 w-32 rounded border border-neutral-400 px-3 uppercase dark:border-neutral-600"
+            className="h-10 w-24 rounded-md border border-neutral-400 px-3 uppercase hover:border-neutral-900 dark:border-neutral-600 hover:dark:border-neutral-300"
             value={icao}
             id="icaoCode"
             onChange={(e) => setIcao(e.target.value.toUpperCase().slice(0, 4))}
@@ -117,13 +117,13 @@ export default function MetarLookup() {
           />
         </div>
         {recent.length > 0 && (
-          <div className="flex h-12 gap-2">
+          <div className="flex h-10 items-center gap-2">
             {recent.map((code) => (
               <button
                 key={code}
                 type="button"
                 onClick={() => setIcao(code)}
-                className="cursor-pointer rounded bg-neutral-200 px-3 py-1 text-sm hover:bg-neutral-300 dark:bg-neutral-700 dark:hover:bg-neutral-500"
+                className="h-8 cursor-pointer rounded bg-neutral-200 px-3 py-1 text-sm hover:bg-neutral-300 dark:bg-neutral-700 dark:hover:bg-neutral-500"
               >
                 {code}
               </button>
