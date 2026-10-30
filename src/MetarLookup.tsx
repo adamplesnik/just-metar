@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router";
 
 const METAR_URL = (icao: string) => `/api/data/metar?ids=${icao}&format=raw`;
 
@@ -19,10 +20,23 @@ function loadRecent(): string[] {
 
 export default function MetarLookup() {
   const [recent, setRecent] = useState(loadRecent);
-  const [icao, setIcao] = useState(() => recent[0] ?? "");
+  const { code } = useParams();
+  const navigate = useNavigate();
+  // URL code wins over the last remembered one
+  const [icao, setIcao] = useState(() => {
+    const fromUrl = code?.toUpperCase();
+    return fromUrl && /^[A-Z]{4}$/.test(fromUrl) ? fromUrl : (recent[0] ?? "");
+  });
   const [metar, setMetar] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [elapsed, setElapsed] = useState<number | null>(null); // ms since last request started
+
+  // keep the URL in sync with a valid code
+  useEffect(() => {
+    if (/^[A-Z]{4}$/.test(icao) && code !== icao) {
+      navigate(`/${icao}`, { replace: true });
+    }
+  }, [icao, code, navigate]);
 
   useEffect(() => {
     if (!/^[A-Z]{4}$/.test(icao)) {
