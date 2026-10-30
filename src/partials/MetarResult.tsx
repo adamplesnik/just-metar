@@ -11,7 +11,7 @@ type Props = {
 
 export default function MetarResult({ icao, metar, status }: Props) {
   return (
-    <pre className="text-xl whitespace-pre-wrap">
+    <div className="text-xl whitespace-pre-wrap">
       {status === 'loading' && <LoadingDots />}
       {status === 'error' && <StatusText text="Could not fetch METAR." />}
       {status === 'idle' && icao.length !== 4 && (
@@ -20,6 +20,6 @@ export default function MetarResult({ icao, metar, status }: Props) {
       {status === 'idle' &&
         icao.length === 4 &&
         (metar ?? <StatusText text="No METAR available for this station." />)}
-    </pre>
+    </div>
   )
 }

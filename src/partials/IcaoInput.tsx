@@ -10,7 +10,7 @@ export default function IcaoInput({ value, onChange }: Props) {
         ICAO code
       </label>
       <input
-        className="h-10 w-24 rounded-md border border-outline px-3 uppercase hover:border-main-dim"
+        className="h-10 w-24 rounded-md border border-outline px-2 uppercase hover:border-main-dim"
         value={value}
         id="icaoCode"
         onChange={(e) => onChange(e.target.value.toUpperCase().slice(0, 4))}
