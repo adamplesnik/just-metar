@@ -1,5 +1,14 @@
+import MetarLookup from "./MetarLookup";
+
 function App() {
-  return <h1 className="p-4 text-2xl font-bold">just-metar</h1>
+  return (
+    <main className="mx-auto max-w-2xl p-4 min-h-screen flex flex-col">
+      <div className="flex-1">
+        <MetarLookup />
+      </div>
+      <h1 className="mb-4 mt-auto text-xs font-bold">Just METAR.</h1>
+    </main>
+  );
 }
 
-export default App
+export default App;
