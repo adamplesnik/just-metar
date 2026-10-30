@@ -22,16 +22,28 @@ export default function MetarLookup() {
   const [icao, setIcao] = useState(() => recent[0] ?? "");
   const [metar, setMetar] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [elapsed, setElapsed] = useState<number | null>(null); // ms since last request started
 
   useEffect(() => {
     if (!/^[A-Z]{4}$/.test(icao)) {
       setMetar(null);
       setStatus("idle");
+      setElapsed(null);
       return;
     }
 
     const controller = new AbortController();
+    const startedAt = performance.now();
+    const tick = setInterval(
+      () => setElapsed(performance.now() - startedAt),
+      100,
+    );
+    const stopTimer = () => {
+      clearInterval(tick);
+      setElapsed(performance.now() - startedAt);
+    };
     setStatus("loading");
+    setElapsed(0);
 
     fetch(METAR_URL(icao), { signal: controller.signal })
       .then((res) => {
@@ -54,13 +66,19 @@ export default function MetarLookup() {
             return next;
           });
         }
+        stopTimer();
         setStatus("idle");
       })
       .catch((err) => {
-        if (err.name !== "AbortError") setStatus("error");
+        if (err.name === "AbortError") return;
+        stopTimer();
+        setStatus("error");
       });
 
-    return () => controller.abort();
+    return () => {
+      clearInterval(tick);
+      controller.abort();
+    };
   }, [icao]);
 
   return (
@@ -104,6 +122,12 @@ export default function MetarLookup() {
           icao.length === 4 &&
           (metar ?? "No METAR available for this station.")}
       </pre>
+      {elapsed !== null && (
+        <p className="text-sm text-neutral-500 dark:text-neutral-400 tabular-nums">
+          {(elapsed / 1000).toFixed(1)} s
+          {status === "loading" && " …"}
+        </p>
+      )}
     </div>
   );
 }
