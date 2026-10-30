@@ -6,7 +6,7 @@ A minimal METAR lookup. Type a four-letter ICAO airport code and get the latest 
 
 - Open `/LZIB` (or any code) to prefill the form.
 - The last three successful lookups are kept in the browser and shown as quick buttons.
-- A timer shows how long the last request took.
+- All caps, because we are all aviators.
 
 Data comes from the [Aviation Weather Center](https://aviationweather.gov/data/api/).
 
