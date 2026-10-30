@@ -13,14 +13,12 @@ export default function MetarResult({ icao, metar, status }: Props) {
     <pre className="text-xl whitespace-pre-wrap">
       {status === 'loading' && <LoadingDots />}
       {status === 'error' && (
-        <span className="text-red-500 dark:text-red-400">
-          Could not fetch METAR.
-        </span>
+        <span className="text-main-dim">Could not fetch METAR.</span>
       )}
       {status === 'idle' &&
         icao.length === 4 &&
         (metar ?? (
-          <span className="text-neutral-500 dark:text-neutral-400">
+          <span className="text-main-dim">
             No METAR available for this station.
           </span>
         ))}

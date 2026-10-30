@@ -13,7 +13,7 @@ export default function RecentCodes({ codes, onSelect }: Props) {
           key={code}
           type="button"
           onClick={() => onSelect(code)}
-          className="h-8 cursor-pointer rounded bg-neutral-200 px-3 py-1 text-sm hover:bg-neutral-300 dark:bg-neutral-700 dark:hover:bg-neutral-500"
+          className="hover:bg-container-bright h-8 cursor-pointer rounded bg-container px-3 py-1 text-sm"
         >
           {code}
         </button>

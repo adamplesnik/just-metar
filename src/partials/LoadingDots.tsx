@@ -9,5 +9,5 @@ export default function LoadingDots() {
     return () => clearInterval(tick)
   }, [])
 
-  return 'Loading' + '.'.repeat(count)
+  return <span className="text-main-dim">Loading{'.'.repeat(count)}</span>
 }

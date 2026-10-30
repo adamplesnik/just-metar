@@ -6,14 +6,11 @@ type Props = {
 export default function IcaoInput({ value, onChange }: Props) {
   return (
     <div className="flex flex-col gap-1">
-      <label
-        htmlFor="icaoCode"
-        className="text-sm font-medium text-neutral-500 dark:text-neutral-400"
-      >
+      <label htmlFor="icaoCode" className="text-sm font-medium text-main-dim">
         ICAO code
       </label>
       <input
-        className="h-10 w-24 rounded-md border border-neutral-400 px-3 uppercase hover:border-neutral-900 dark:border-neutral-600 hover:dark:border-neutral-300"
+        className="h-10 w-24 rounded-md border border-outline px-3 uppercase hover:border-main-dim"
         value={value}
         id="icaoCode"
         onChange={(e) => onChange(e.target.value.toUpperCase().slice(0, 4))}
