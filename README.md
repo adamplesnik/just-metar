@@ -1,4 +1,6 @@
-# just-metar
+![just-metar](public/github.png)
+
+# JUST METAR
 
 A minimal METAR lookup. Type a four-letter ICAO airport code and get the latest raw METAR.
 
