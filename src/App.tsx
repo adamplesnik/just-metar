@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router'
 import MetarLookup from './MetarLookup'
+import Footer from './partials/Footer'
 
 function App() {
   return (
@@ -9,16 +10,7 @@ function App() {
           <Route path="/:code?" element={<MetarLookup />} />
         </Routes>
       </div>
-      <div className="w full flex justify-between">
-        <h1 className="mt-auto text-xs font-bold">Just METAR</h1>
-        <a
-          href="https://github.com/adamplesnik/just-metar"
-          className="text-xs text-main-dim underline hover:text-main"
-          target="blank"
-        >
-          GitHub
-        </a>
-      </div>
+      <Footer />
     </main>
   )
 }
