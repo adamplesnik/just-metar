@@ -4,8 +4,8 @@ import Footer from './partials/Footer'
 
 function App() {
   return (
-    <main className="mx-auto flex min-h-svh max-w-xl flex-col p-4">
-      <div className="flex-1">
+    <main className="app">
+      <div className="app-content">
         <Routes>
           <Route path="/:code?" element={<MetarLookup />} />
         </Routes>

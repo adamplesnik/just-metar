@@ -20,7 +20,7 @@ export default function MetarResult({ icao, metar, status }: Props) {
       {status === 'idle' &&
         icao.length === 4 &&
         (metar ? (
-          <div className="text-xl whitespace-pre-wrap">{metar}</div>
+          <div className="metar">{metar}</div>
         ) : (
           <StatusText text="No METAR available for this station." />
         ))}

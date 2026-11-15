@@ -82,8 +82,8 @@ export default function MetarLookup() {
   }, [icao])
 
   return (
-    <div className="mt-12 flex flex-col gap-4">
-      <div className="flex items-end gap-4">
+    <div className="lookup">
+      <div className="lookup-controls">
         <IcaoInput value={icao} onChange={setIcao} />
         <RecentCodes codes={recent} onSelect={setIcao} />
       </div>

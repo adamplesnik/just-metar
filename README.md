@@ -12,7 +12,7 @@ Data comes from the [Aviation Weather Center](https://aviationweather.gov/data/a
 
 ## Stack
 
-React, Vite, TypeScript, Tailwind CSS, React Router.
+React, Vite, TypeScript, plain CSS, React Router.
 
 ## Development
 
