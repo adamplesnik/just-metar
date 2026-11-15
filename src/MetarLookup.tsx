@@ -99,8 +99,7 @@ export default function MetarLookup() {
 
   return (
     <div className="mt-12 flex flex-col gap-4">
-      <div className="flex items-end gap-4">
-        <IcaoInput value={icao} onChange={setIcao} />
+      <IcaoInput value={icao} onChange={setIcao}>
         <FavouriteToggle
           isFavourite={isFavourite}
           canAdd={isValid && !isFull}
@@ -109,7 +108,7 @@ export default function MetarLookup() {
             updateFavourites(favourites.filter((c) => c !== icao))
           }
         />
-      </div>
+      </IcaoInput>
       <Favourites
         codes={favourites}
         slots={MAX_FAV}
