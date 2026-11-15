@@ -15,7 +15,7 @@ export default function Favourites({ codes, slots, active, onSelect }: Props) {
           key={code}
           type="button"
           onClick={() => onSelect(code)}
-          className={`h-8 flex-1 cursor-pointer rounded border bg-container px-3 py-1 hover:bg-container-bright ${
+          className={`h-10 flex-1 cursor-pointer rounded border bg-container px-3 py-1 hover:bg-container-bright ${
             code === active ? 'border-main-dim' : 'border-transparent'
           }`}
         >
@@ -29,7 +29,7 @@ export default function Favourites({ codes, slots, active, onSelect }: Props) {
           disabled
           aria-hidden="true"
           tabIndex={-1}
-          className="pointer-events-none h-8 flex-1 rounded border border-transparent bg-container px-3 py-1 opacity-30"
+          className="pointer-events-none h-10 flex-1 rounded border border-transparent bg-container px-3 py-1 opacity-30"
         >
           FAV{codes.length + i + 1}
         </button>

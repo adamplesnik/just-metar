@@ -17,7 +17,7 @@ export default function FavouriteToggle({
         <button
           type="button"
           onClick={onRemove}
-          className="h-8 cursor-pointer rounded px-2 py-1 text-xs text-main-dim uppercase hover:bg-container"
+          className="h-8 cursor-pointer rounded px-2 py-1 text-xs text-main-dim uppercase hover:bg-container hover:text-main"
         >
           Remove from fav
         </button>
@@ -26,7 +26,7 @@ export default function FavouriteToggle({
           type="button"
           disabled={!canAdd}
           onClick={onAdd}
-          className="h-8 cursor-pointer rounded px-2 py-1 text-xs text-main-dim uppercase hover:bg-container disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+          className="h-8 cursor-pointer rounded px-2 py-1 text-xs text-main-dim uppercase hover:bg-container hover:text-main disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
         >
           Add to fav
         </button>
