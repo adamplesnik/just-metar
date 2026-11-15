@@ -9,14 +9,16 @@ export default function Favourites({ codes, slots, active, onSelect }: Props) {
   const empty = Math.max(0, slots - codes.length)
 
   return (
-    <div className="flex h-10 items-center gap-2">
+    <div className="flex items-center gap-2">
       {codes.map((code) => (
         <button
           key={code}
           type="button"
           onClick={() => onSelect(code)}
-          className={`h-10 flex-1 cursor-pointer rounded border bg-container px-2 py-1 hover:bg-container-bright sm:px-3 ${
-            code === active ? 'border-main-dim' : 'border-transparent'
+          className={`h-8 flex-1 cursor-pointer rounded border bg-container-dim px-2 py-1 transition-colors hover:bg-container-bright hover:text-main sm:px-3 ${
+            code === active
+              ? 'border-outline'
+              : 'border-transparent text-main-dim'
           }`}
         >
           {code}
@@ -29,7 +31,7 @@ export default function Favourites({ codes, slots, active, onSelect }: Props) {
           disabled
           aria-hidden="true"
           tabIndex={-1}
-          className="pointer-events-none h-10 flex-1 rounded border border-transparent bg-container px-2 py-1 opacity-30 sm:px-3"
+          className="pointer-events-none h-8 flex-1 rounded-md border border-transparent bg-container px-2 py-1 opacity-30 sm:px-3"
         >
           FAV{codes.length + i + 1}
         </button>

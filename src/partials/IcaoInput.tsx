@@ -12,7 +12,7 @@ export default function IcaoInput({ value, onChange, children }: Props) {
       <label htmlFor="icaoCode" className="text-sm text-main-dim">
         ICAO code
       </label>
-      <div className="flex items-center rounded-md border border-outline p-1 focus-within:border-red-300 hover:border-main-dim">
+      <div className="flex items-center rounded-md border border-outline p-1 focus-within:border-main-dim focus-within:outline-2 focus-within:outline-blue-500/50 hover:border-main-dim">
         <input
           className="w-full border-none px-2 focus:outline-none"
           value={value}
