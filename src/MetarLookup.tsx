@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router'
 import IcaoInput from './partials/IcaoInput'
 import MetarResult, { type Status } from './partials/MetarResult'
 import Favourites from './partials/Favourites'
+import FavouriteToggle from './partials/FavouriteToggle'
 
 const METAR_URL = (icao: string) => `/api/data/metar?ids=${icao}&format=raw`
 
@@ -100,28 +101,14 @@ export default function MetarLookup() {
     <div className="mt-12 flex flex-col gap-4">
       <div className="flex items-end gap-4">
         <IcaoInput value={icao} onChange={setIcao} />
-        <div className="flex h-10 items-center">
-          {isFavourite ? (
-            <button
-              type="button"
-              onClick={() =>
-                updateFavourites(favourites.filter((c) => c !== icao))
-              }
-              className="h-8 cursor-pointer rounded px-3 py-1 text-sm text-main-dim uppercase hover:bg-container"
-            >
-              Remove from fav
-            </button>
-          ) : (
-            <button
-              type="button"
-              disabled={!isValid || isFull}
-              onClick={() => updateFavourites([...favourites, icao])}
-              className="h-8 cursor-pointer rounded px-3 py-1 text-sm text-main-dim uppercase hover:bg-container disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
-            >
-              Add to fav
-            </button>
-          )}
-        </div>
+        <FavouriteToggle
+          isFavourite={isFavourite}
+          canAdd={isValid && !isFull}
+          onAdd={() => updateFavourites([...favourites, icao])}
+          onRemove={() =>
+            updateFavourites(favourites.filter((c) => c !== icao))
+          }
+        />
       </div>
       <Favourites
         codes={favourites}
