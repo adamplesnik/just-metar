@@ -98,7 +98,7 @@ export default function MetarLookup() {
   const isFull = favourites.length >= MAX_FAV
 
   return (
-    <div className="mt-12 flex flex-col gap-4">
+    <div className="mt-12 flex flex-col gap-2">
       <IcaoInput value={icao} onChange={setIcao}>
         <FavouriteToggle
           isFavourite={isFavourite}

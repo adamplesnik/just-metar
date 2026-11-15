@@ -9,7 +9,7 @@ type Props = {
 export default function IcaoInput({ value, onChange, children }: Props) {
   return (
     <div className="flex flex-1 flex-col gap-1">
-      <label htmlFor="icaoCode" className="text-sm text-main-dim">
+      <label htmlFor="icaoCode" className="text-xs text-main-dim">
         ICAO code
       </label>
       <div className="flex items-center rounded-md border border-outline p-1 focus-within:border-main-dim focus-within:outline-2 focus-within:outline-blue-500/50 hover:border-main-dim">

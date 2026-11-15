@@ -9,7 +9,7 @@ export default function Favourites({ codes, slots, active, onSelect }: Props) {
   const empty = Math.max(0, slots - codes.length)
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1 rounded-md border border-outline p-1">
       {codes.map((code) => (
         <button
           key={code}
@@ -29,7 +29,7 @@ export default function Favourites({ codes, slots, active, onSelect }: Props) {
           disabled
           aria-hidden="true"
           tabIndex={-1}
-          className="pointer-events-none h-8 flex-1 rounded-md border border-transparent bg-container px-2 py-1 opacity-30 sm:px-3"
+          className="pointer-events-none h-8 flex-1 px-2 py-1 opacity-20 sm:px-3"
         >
           FAV{codes.length + i + 1}
         </button>

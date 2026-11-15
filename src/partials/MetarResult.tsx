@@ -11,7 +11,7 @@ type Props = {
 
 export default function MetarResult({ icao, metar, status }: Props) {
   return (
-    <>
+    <div className="pt-8">
       {status === 'loading' && <LoadingDots key={icao} />}
       {status === 'error' && <StatusText text="Could not fetch METAR." />}
       {status === 'idle' && icao.length !== 4 && (
@@ -24,6 +24,6 @@ export default function MetarResult({ icao, metar, status }: Props) {
         ) : (
           <StatusText text="No METAR available for this station." />
         ))}
-    </>
+    </div>
   )
 }
