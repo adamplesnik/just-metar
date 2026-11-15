@@ -2,33 +2,51 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import IcaoInput from './partials/IcaoInput'
 import MetarResult, { type Status } from './partials/MetarResult'
-import RecentCodes from './partials/RecentCodes'
+import Favourites from './partials/Favourites'
 
 const METAR_URL = (icao: string) => `/api/data/metar?ids=${icao}&format=raw`
 
-const STORAGE_KEY = 'just-metar:recent'
-const MAX_RECENT = 3
+const FAV_KEY = 'just-metar:favourites'
+const LAST_KEY = 'just-metar:last'
+const MAX_FAV = 4
+const isIcao = (c: unknown): c is string =>
+  typeof c === 'string' && /^[A-Z]{4}$/.test(c)
 
-function loadRecent(): string[] {
+function loadFavourites(): string[] {
   try {
-    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]')
+    const parsed = JSON.parse(localStorage.getItem(FAV_KEY) ?? '[]')
     if (!Array.isArray(parsed)) return []
-    return parsed
-      .filter((c) => typeof c === 'string' && /^[A-Z]{4}$/.test(c))
-      .slice(0, MAX_RECENT)
+    return [...new Set(parsed.filter(isIcao))].sort().slice(0, MAX_FAV)
   } catch {
     return []
   }
 }
 
+function loadLast(): string {
+  try {
+    const last = localStorage.getItem(LAST_KEY)
+    return isIcao(last) ? last : ''
+  } catch {
+    return ''
+  }
+}
+
+function save(key: string, value: string) {
+  try {
+    localStorage.setItem(key, value)
+  } catch {
+    // storage unavailable (private mode / quota): keep in memory only
+  }
+}
+
 export default function MetarLookup() {
-  const [recent, setRecent] = useState(loadRecent)
+  const [favourites, setFavourites] = useState(loadFavourites)
   const { code } = useParams()
   const navigate = useNavigate()
   // URL code wins over the last remembered one
   const [icao, setIcao] = useState(() => {
     const fromUrl = code?.toUpperCase()
-    return fromUrl && /^[A-Z]{4}$/.test(fromUrl) ? fromUrl : (recent[0] ?? '')
+    return isIcao(fromUrl) ? fromUrl : loadLast()
   })
   const [metar, setMetar] = useState<string | null>(null)
   const [status, setStatus] = useState<Status>('idle')
@@ -57,20 +75,7 @@ export default function MetarLookup() {
       })
       .then((text) => {
         setMetar(text.trim() || null) // empty = no METAR for this station
-        if (text.trim()) {
-          setRecent((prev) => {
-            const next = [icao, ...prev.filter((c) => c !== icao)].slice(
-              0,
-              MAX_RECENT,
-            )
-            try {
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-            } catch {
-              // storage unavailable (private mode / quota): keep in memory only
-            }
-            return next
-          })
-        }
+        if (text.trim()) save(LAST_KEY, icao)
         setStatus('idle')
       })
       .catch((err) => {
@@ -81,12 +86,49 @@ export default function MetarLookup() {
     return () => controller.abort()
   }, [icao])
 
+  const updateFavourites = (next: string[]) => {
+    const sorted = [...next].sort()
+    setFavourites(sorted)
+    save(FAV_KEY, JSON.stringify(sorted))
+  }
+
+  const isValid = isIcao(icao)
+  const isFavourite = favourites.includes(icao)
+  const isFull = favourites.length >= MAX_FAV
+
   return (
     <div className="mt-12 flex flex-col gap-4">
       <div className="flex items-end gap-4">
         <IcaoInput value={icao} onChange={setIcao} />
-        <RecentCodes codes={recent} onSelect={setIcao} />
+        <div className="flex h-10 items-center">
+          {isFavourite ? (
+            <button
+              type="button"
+              onClick={() =>
+                updateFavourites(favourites.filter((c) => c !== icao))
+              }
+              className="h-8 cursor-pointer rounded px-3 py-1 text-sm text-main-dim uppercase hover:bg-red-500/10"
+            >
+              Remove from fav
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={!isValid || isFull}
+              onClick={() => updateFavourites([...favourites, icao])}
+              className="h-8 cursor-pointer rounded px-3 py-1 text-sm text-main-dim uppercase hover:bg-green-500/10 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+            >
+              Add to fav
+            </button>
+          )}
+        </div>
       </div>
+      <Favourites
+        codes={favourites}
+        slots={MAX_FAV}
+        active={icao}
+        onSelect={setIcao}
+      />
       <MetarResult icao={icao} metar={metar} status={status} />
     </div>
   )
