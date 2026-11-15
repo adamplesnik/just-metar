@@ -107,7 +107,7 @@ export default function MetarLookup() {
               onClick={() =>
                 updateFavourites(favourites.filter((c) => c !== icao))
               }
-              className="h-8 cursor-pointer rounded px-3 py-1 text-sm text-main-dim uppercase hover:bg-red-500/10"
+              className="h-8 cursor-pointer rounded px-3 py-1 text-sm text-main-dim uppercase hover:bg-container"
             >
               Remove from fav
             </button>
@@ -116,7 +116,7 @@ export default function MetarLookup() {
               type="button"
               disabled={!isValid || isFull}
               onClick={() => updateFavourites([...favourites, icao])}
-              className="h-8 cursor-pointer rounded px-3 py-1 text-sm text-main-dim uppercase hover:bg-green-500/10 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+              className="h-8 cursor-pointer rounded px-3 py-1 text-sm text-main-dim uppercase hover:bg-container disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
             >
               Add to fav
             </button>
