@@ -3,7 +3,7 @@ import StatusText from './StatusText'
 
 const STAGES = [
   { after: 0, text: 'Loading' },
-  { after: 3000, text: 'Pretending I can read METAR' },
+  { after: 3000, text: 'Pretending I can load METAR' },
   { after: 6000, text: 'Fly somewhere else?' },
 ]
 
