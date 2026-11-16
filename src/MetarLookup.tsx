@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import IcaoInput from './partials/IcaoInput'
-import MetarResult, { type Status } from './partials/MetarResult'
+import MetarResult, { type Metar, type Status } from './partials/MetarResult'
 import Favourites from './partials/Favourites'
 import FavouriteToggle from './partials/FavouriteToggle'
 
-const METAR_URL = (icao: string) => `/api/data/metar?ids=${icao}&format=raw`
+const METAR_URL = (icao: string) => `/api/data/metar?ids=${icao}&format=json`
 
 const FAV_KEY = 'just-metar:favourites'
 const LAST_KEY = 'just-metar:last'
@@ -49,7 +49,7 @@ export default function MetarLookup() {
     const fromUrl = code?.toUpperCase()
     return isIcao(fromUrl) ? fromUrl : loadLast()
   })
-  const [metar, setMetar] = useState<string | null>(null)
+  const [metar, setMetar] = useState<Metar | null>(null)
   const [status, setStatus] = useState<Status>('idle')
 
   // keep the URL in sync with a valid code
@@ -72,11 +72,17 @@ export default function MetarLookup() {
     fetch(METAR_URL(icao), { signal: controller.signal })
       .then((res) => {
         if (!res.ok) throw new Error(String(res.status))
-        return res.text()
+        // 204 = no METAR for this station
+        return res.status === 204 ? [] : res.json()
       })
-      .then((text) => {
-        setMetar(text.trim() || null) // empty = no METAR for this station
-        if (text.trim()) save(LAST_KEY, icao)
+      .then((data: { rawOb?: string; name?: string }[]) => {
+        const report = Array.isArray(data) ? data[0] : undefined
+        if (report?.rawOb) {
+          setMetar({ raw: report.rawOb, name: report.name ?? null })
+          save(LAST_KEY, icao)
+        } else {
+          setMetar(null)
+        }
         setStatus('idle')
       })
       .catch((err) => {
