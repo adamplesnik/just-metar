@@ -80,7 +80,16 @@ Netlify (`netlify.toml`):
 Vite dev server (`vite.config.ts`):
 
 ```ts
-server: { proxy: { '/api/metar': { target: 'https://aviationweather.gov', changeOrigin: true, rewrite: () => '/api/data/metar' } } }
+server: {
+  proxy: {
+    '/api/metar': {
+      target: 'https://aviationweather.gov',
+      changeOrigin: true,
+      // swap only the path, keep the ?ids=…&format=json query
+      rewrite: (path) => path.replace(/^\/api\/metar/, '/api/data/metar'),
+    },
+  },
+}
 ```
 
 ### Styling
