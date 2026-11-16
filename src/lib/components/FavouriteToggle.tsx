@@ -15,10 +15,10 @@ export default function FavouriteToggle({
 
   return (
     <label
-      className={`flex h-8 items-center gap-2 rounded px-2 py-1 text-xs text-main-dim uppercase ${
+      className={`jm:flex jm:h-8 jm:items-center jm:gap-2 jm:rounded jm:px-2 jm:py-1 jm:text-xs jm:text-main-dim jm:uppercase ${
         disabled
-          ? 'cursor-not-allowed opacity-30'
-          : 'cursor-pointer hover:bg-container-bright hover:text-main'
+          ? 'jm:cursor-not-allowed jm:opacity-30'
+          : 'jm:cursor-pointer jm:hover:bg-container-bright jm:hover:text-main'
       }`}
     >
       <input
@@ -26,7 +26,7 @@ export default function FavouriteToggle({
         checked={isFavourite}
         disabled={disabled}
         onChange={(e) => (e.target.checked ? onAdd() : onRemove())}
-        className="cursor-[inherit] accent-main"
+        className="jm:cursor-[inherit] jm:accent-main"
       />
       Fav
     </label>

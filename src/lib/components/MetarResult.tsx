@@ -13,12 +13,22 @@ type Props = {
   icao: string
   metar: Metar | null
   status: Status
+  /** compact: no top padding and no airport-name tooltip (the card shows a title) */
+  compact?: boolean
 }
 
-function MetarText({ icao, metar }: { icao: string; metar: Metar }) {
+function MetarText({
+  icao,
+  metar,
+  tooltip,
+}: {
+  icao: string
+  metar: Metar
+  tooltip: boolean
+}) {
   // mark the first occurrence of the station code, e.g. "METAR LKPR 152030Z …"
   const match = new RegExp(`\\b${icao}\\b`).exec(metar.raw)
-  if (!match || !metar.name) return <>{metar.raw}</>
+  if (!tooltip || !match || !metar.name) return <>{metar.raw}</>
 
   const before = metar.raw.slice(0, match.index)
   const after = metar.raw.slice(match.index + icao.length)
@@ -32,9 +42,14 @@ function MetarText({ icao, metar }: { icao: string; metar: Metar }) {
   )
 }
 
-export default function MetarResult({ icao, metar, status }: Props) {
+export default function MetarResult({
+  icao,
+  metar,
+  status,
+  compact = false,
+}: Props) {
   return (
-    <div className="relative pt-8">
+    <div className={`jm:relative ${compact ? '' : 'jm:pt-8'}`}>
       {status === 'loading' && <LoadingDots key={icao} />}
       {status === 'error' && <StatusText text="Could not fetch METAR." />}
       {status === 'idle' && icao.length !== 4 && (
@@ -43,8 +58,8 @@ export default function MetarResult({ icao, metar, status }: Props) {
       {status === 'idle' &&
         icao.length === 4 &&
         (metar ? (
-          <div className="text-xl whitespace-pre-wrap">
-            <MetarText icao={icao} metar={metar} />
+          <div className="jm:text-xl jm:whitespace-pre-wrap">
+            <MetarText icao={icao} metar={metar} tooltip={!compact} />
           </div>
         ) : (
           <StatusText text="No METAR available for this station." />

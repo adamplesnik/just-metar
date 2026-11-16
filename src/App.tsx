@@ -1,5 +1,5 @@
 import { Route, Routes } from 'react-router'
-import MetarLookup from './MetarLookup'
+import MetarPage from './MetarPage'
 import Footer from './partials/Footer'
 
 function App() {
@@ -7,7 +7,7 @@ function App() {
     <main className="mx-auto flex min-h-svh max-w-md flex-col px-4">
       <div className="flex-1">
         <Routes>
-          <Route path="/:code?" element={<MetarLookup />} />
+          <Route path="/:code?" element={<MetarPage />} />
         </Routes>
       </div>
       <Footer />
