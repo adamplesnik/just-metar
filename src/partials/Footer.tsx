@@ -1,7 +1,7 @@
 export default function Footer() {
   return (
-    <div className="w full flex justify-between">
-      <h1 className="mt-auto text-xs font-bold">
+    <div className="w full flex justify-between pb-8">
+      <h1 className="text-xs font-bold">
         <a href="/" className="flex items-center gap-1">
           <svg
             xmlns="http://www.w3.org/2000/svg"
