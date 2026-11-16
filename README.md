@@ -19,35 +19,37 @@ npm install just-metar
 ```
 
 ```tsx
-import { MetarCard, MetarFavourites, MetarLookup } from 'just-metar'
+import { JustMetar } from 'just-metar'
 import 'just-metar/style.css'
 
-// 1. search, favourites and result
-<MetarLookup endpoint="/api/metar" />
+// search, favourites and result
+<JustMetar endpoint="/api/metar" />
 
-// 2. search and result, no favourites
-<MetarLookup endpoint="/api/metar" favourites={false} />
+// search and result, no favourites
+<JustMetar endpoint="/api/metar" noFavourites />
 
-// 3. fixed set of 2–4 airports, no search
-<MetarFavourites endpoint="/api/metar" airports={['LZKZ', 'LZIB', 'LOWW']} />
+// predefined favourites the user can change
+<JustMetar endpoint="/api/metar" favourites={['LZIB', 'LOWW']} />
 
-// 4. one station: airport name as title, METAR below
-<MetarCard endpoint="/api/metar" code="LZIB" />
+// fixed favourites, no search
+<JustMetar endpoint="/api/metar" noInput favourites={['LZKZ', 'LZIB', 'LOWW']} />
+
+// one station: airport name as title, METAR below
+<JustMetar endpoint="/api/metar" noInput noFavourites code="LZIB" />
 ```
 
-Every component takes `theme` (`'system'` by default, `'light'` or `'dark'`) and `className` for layout.
-
-| Prop           | Component                        |                                                                                   |
-| -------------- | -------------------------------- | --------------------------------------------------------------------------------- |
-| `endpoint`     | all                              | Required. Proxy of `https://aviationweather.gov/api/data/metar`, see below.       |
-| `theme`        | all                              | `'system'` \| `'light'` \| `'dark'`                                               |
-| `className`    | all                              | Added to the root element.                                                        |
-| `favourites`   | `MetarLookup`                    | Show the FAV checkbox and the favourites bar. Default `true`.                     |
-| `defaultCode`  | `MetarLookup`, `MetarFavourites` | Code shown first. `MetarLookup` falls back to the last successful lookup.         |
-| `onCodeChange` | `MetarLookup`                    | Called when the typed code changes, e.g. to sync the URL.                         |
-| `storageKey`   | `MetarLookup`                    | `localStorage` key prefix for favourites and the last code. Default `just-metar`. |
-| `airports`     | `MetarFavourites`                | Two to four ICAO codes, shown in the given order.                                 |
-| `code`         | `MetarCard`                      | ICAO code of the station.                                                         |
+| Prop           | Default      |                                                                                                                                                                                   |
+| -------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `endpoint`     |              | Required. Proxy of `https://aviationweather.gov/api/data/metar`, see below.                                                                                                       |
+| `noInput`      | `false`      | Hides the ICAO input and the FAV checkbox.                                                                                                                                        |
+| `noFavourites` | `false`      | Hides the favourites bar.                                                                                                                                                         |
+| `favourites`   |              | One to four ICAO codes, sorted alphabetically. With the input shown they are the starting set; users can add and remove (saved in `localStorage`). With `noInput` they are fixed. |
+| `code`         |              | One ICAO code. Only together with `noInput` and `noFavourites`; TypeScript rejects it otherwise.                                                                                  |
+| `defaultCode`  |              | Code shown first. Falls back to the last lookup, then the first favourite.                                                                                                        |
+| `onCodeChange` |              | Called when the selected code changes, e.g. to sync the URL.                                                                                                                      |
+| `storageKey`   | `just-metar` | `localStorage` key prefix for favourites and the last code.                                                                                                                       |
+| `theme`        | `system`     | `'system'` \| `'light'` \| `'dark'`                                                                                                                                               |
+| `className`    |              | Added to the root element.                                                                                                                                                        |
 
 There is also a `useMetar(endpoint, code)` hook returning `{ metar, status }` for your own UI.
 

@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from 'react-router'
-import { MetarLookup } from './lib'
+import { JustMetar } from './lib'
 
 // the website: the package component plus URL routing (/LZIB)
 export default function MetarPage() {
@@ -8,7 +8,7 @@ export default function MetarPage() {
 
   return (
     <div className="mt-12">
-      <MetarLookup
+      <JustMetar
         endpoint="/api/data/metar"
         defaultCode={code}
         onCodeChange={(next) => {
