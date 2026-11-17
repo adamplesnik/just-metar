@@ -1,6 +1,6 @@
 {
   "name": "just-metar",
-  "version": "0.1.2-beta",
+  "version": "0.1.2",
   "description": "Minimal React components for the latest raw METAR: lookup, favourites and a single-station card.",
   "license": "MIT",
   "type": "module",
