@@ -1,6 +1,6 @@
 {
   "name": "just-metar",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Minimal React components for the latest raw METAR: lookup, favourites and a single-station card.",
   "license": "MIT",
   "type": "module",
@@ -15,7 +15,7 @@
     "type": "git",
     "url": "git+https://github.com/adamplesnik/just-metar.git"
   },
-  "homepage": "https://github.com/adamplesnik/just-metar#readme",
+  "homepage": "https://metar.adamplesnik.com",
   "files": [
     "dist-lib"
   ],

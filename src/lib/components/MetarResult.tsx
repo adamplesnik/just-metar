@@ -49,7 +49,7 @@ export default function MetarResult({
   compact = false,
 }: Props) {
   return (
-    <div className={`jm:relative ${compact ? '' : 'jm:pt-8'}`}>
+    <div className={`jm:relative ${compact ? '' : 'jm:pt-2'}`}>
       {status === 'loading' && <LoadingDots key={icao} />}
       {status === 'error' && <StatusText text="Could not fetch METAR." />}
       {status === 'idle' && icao.length !== 4 && (

@@ -7,7 +7,7 @@ export default function MetarPage() {
   const navigate = useNavigate()
 
   return (
-    <div className="mt-12">
+    <div className="mt-12 flex flex-col gap-12">
       <JustMetar
         endpoint="/api/data/metar"
         defaultCode={code}

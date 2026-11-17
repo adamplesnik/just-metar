@@ -143,7 +143,7 @@ export default function JustMetar(props: JustMetarProps) {
 
   return (
     <Root theme={theme} className={className}>
-      <div className="jm:flex jm:flex-col jm:gap-4">
+      <div className="jm:flex jm:flex-col jm:gap-2">
         {!noInput && (
           <IcaoInput value={icao} onChange={changeIcao}>
             {!noFavourites && (
