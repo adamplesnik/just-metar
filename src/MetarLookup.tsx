@@ -6,6 +6,14 @@ import Favourites from './partials/Favourites'
 import FavouriteToggle from './partials/FavouriteToggle'
 
 const METAR_URL = (icao: string) => `/api/data/metar?ids=${icao}&format=json`
+const TAF_URL = (icao: string) => `/api/data/taf?ids=${icao}&format=json`
+
+// 204 = no report for this station
+const fetchJson = (url: string, signal: AbortSignal) =>
+  fetch(url, { signal }).then((res) => {
+    if (!res.ok) throw new Error(String(res.status))
+    return res.status === 204 ? [] : res.json()
+  })
 
 const FAV_KEY = 'just-metar:favourites'
 const LAST_KEY = 'just-metar:last'
@@ -69,22 +77,36 @@ export default function MetarLookup() {
     const controller = new AbortController()
     setStatus('loading')
 
-    fetch(METAR_URL(icao), { signal: controller.signal })
-      .then((res) => {
-        if (!res.ok) throw new Error(String(res.status))
-        // 204 = no METAR for this station
-        return res.status === 204 ? [] : res.json()
+    // a missing TAF must not hide the METAR
+    const taf = fetchJson(TAF_URL(icao), controller.signal)
+      .then((data: { rawTAF?: string }[]) =>
+        Array.isArray(data) ? (data[0]?.rawTAF ?? null) : null,
+      )
+      .catch((err) => {
+        if (err.name === 'AbortError') throw err
+        return null
       })
-      .then((data: { rawOb?: string; name?: string }[]) => {
-        const report = Array.isArray(data) ? data[0] : undefined
-        if (report?.rawOb) {
-          setMetar({ raw: report.rawOb, name: report.name ?? null })
-          save(LAST_KEY, icao)
-        } else {
-          setMetar(null)
-        }
-        setStatus('idle')
-      })
+
+    Promise.all([fetchJson(METAR_URL(icao), controller.signal), taf])
+      .then(
+        ([data, rawTaf]: [
+          { rawOb?: string; name?: string }[],
+          string | null,
+        ]) => {
+          const report = Array.isArray(data) ? data[0] : undefined
+          if (report?.rawOb) {
+            setMetar({
+              raw: report.rawOb,
+              name: report.name ?? null,
+              taf: rawTaf,
+            })
+            save(LAST_KEY, icao)
+          } else {
+            setMetar(null)
+          }
+          setStatus('idle')
+        },
+      )
       .catch((err) => {
         if (err.name === 'AbortError') return
         setStatus('error')

@@ -7,6 +7,15 @@ export type Status = 'idle' | 'loading' | 'error'
 export type Metar = {
   raw: string
   name: string | null
+  taf: string | null
+}
+
+// one change group per line: FM, BECMG, TEMPO and PROB start a new line
+function formatTaf(raw: string) {
+  return raw
+    .trim()
+    .replace(/\s+(?=(FM\d{6}|BECMG|TEMPO|PROB\d{2})\b)/g, '\n  ')
+    .replace(/\n {2}(PROB\d{2})\n {2}(TEMPO)/g, '\n  $1 $2')
 }
 
 type Props = {
@@ -87,6 +96,11 @@ export default function MetarResult({ icao, metar, status }: Props) {
               <MetarAge raw={metar.raw} />
             </div>
             <div className="text-xl whitespace-pre-wrap">{metar.raw}</div>
+            {metar.taf && (
+              <div className="pt-6 text-sm whitespace-pre-wrap text-main-dim">
+                {formatTaf(metar.taf)}
+              </div>
+            )}
           </>
         ) : (
           <StatusText text="No METAR available for this station." />
