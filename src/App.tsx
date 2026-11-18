@@ -1,16 +1,16 @@
 import { Route, Routes } from 'react-router'
 import MetarLookup from './MetarLookup'
-import Footer from './partials/Footer'
+import Header from './partials/Header'
 
 function App() {
   return (
-    <main className="mx-auto flex min-h-svh max-w-md flex-col px-4">
-      <div className="flex-1">
+    <main className="mx-auto flex min-h-svh max-w-md flex-col px-4 py-8">
+      <Header />
+      <div className="flex flex-1 flex-col justify-between">
         <Routes>
           <Route path="/:code?" element={<MetarLookup />} />
         </Routes>
       </div>
-      <Footer />
     </main>
   )
 }

@@ -104,24 +104,26 @@ export default function MetarLookup() {
   const isFull = favourites.length >= MAX_FAV
 
   return (
-    <div className="mt-12 flex flex-col gap-2">
-      <IcaoInput value={icao} onChange={setIcao}>
-        <FavouriteToggle
-          isFavourite={isFavourite}
-          canAdd={isValid && !isFull}
-          onAdd={() => updateFavourites([...favourites, icao])}
-          onRemove={() =>
-            updateFavourites(favourites.filter((c) => c !== icao))
-          }
-        />
-      </IcaoInput>
-      <Favourites
-        codes={favourites}
-        slots={MAX_FAV}
-        active={icao}
-        onSelect={setIcao}
-      />
+    <>
       <MetarResult icao={icao} metar={metar} status={status} />
-    </div>
+      <div className="flex flex-col gap-2">
+        <IcaoInput value={icao} onChange={setIcao}>
+          <FavouriteToggle
+            isFavourite={isFavourite}
+            canAdd={isValid && !isFull}
+            onAdd={() => updateFavourites([...favourites, icao])}
+            onRemove={() =>
+              updateFavourites(favourites.filter((c) => c !== icao))
+            }
+          />
+        </IcaoInput>
+        <Favourites
+          codes={favourites}
+          slots={MAX_FAV}
+          active={icao}
+          onSelect={setIcao}
+        />
+      </div>
+    </>
   )
 }

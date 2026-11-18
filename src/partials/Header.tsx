@@ -1,6 +1,6 @@
-export default function Footer() {
+export default function Header() {
   return (
-    <div className="w full flex justify-between pb-8">
+    <div className="w full flex justify-between pt-8">
       <h1 className="text-xs font-bold">
         <a href="/" className="flex items-center gap-1">
           <svg
