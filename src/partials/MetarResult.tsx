@@ -1,5 +1,5 @@
+import { useEffect, useState } from 'react'
 import LoadingDots from './LoadingDots'
-import MetarResultTooltip from './MetarResultTooltip'
 import StatusText from './StatusText'
 
 export type Status = 'idle' | 'loading' | 'error'
@@ -15,26 +15,64 @@ type Props = {
   status: Status
 }
 
-function MetarText({ icao, metar }: { icao: string; metar: Metar }) {
-  // mark the first occurrence of the station code, e.g. "METAR LKPR 152030Z …"
-  const match = new RegExp(`\\b${icao}\\b`).exec(metar.raw)
-  if (!match || !metar.name) return <>{metar.raw}</>
+// observation time from the "DDHHMMZ" group (UTC), resolved against the user's clock
+function observationTime(raw: string, now: Date): Date | null {
+  const match = /\b(\d{2})(\d{2})(\d{2})Z\b/.exec(raw)
+  if (!match) return null
+  const [day, hour, minute] = match.slice(1).map(Number)
+  let obs = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), day, hour, minute)
+  // a day in the future means the report is from the previous month
+  if (obs > now.getTime() + 60 * 60 * 1000) {
+    obs = Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth() - 1,
+      day,
+      hour,
+      minute,
+    )
+  }
+  return new Date(obs)
+}
 
-  const before = metar.raw.slice(0, match.index)
-  const after = metar.raw.slice(match.index + icao.length)
+function MetarAge({ raw }: { raw: string }) {
+  const [now, setNow] = useState(() => new Date())
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30 * 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  const obs = observationTime(raw, now)
+  if (!obs) return null
+
+  const minutes = Math.max(
+    0,
+    Math.floor((now.getTime() - obs.getTime()) / 60000),
+  )
+  const localTime = obs.toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 
   return (
-    <>
-      {before}
-      <MetarResultTooltip label={icao} tooltip={metar.name} />
-      {after}
-    </>
+    <div
+      className={`text-sm ${
+        minutes >= 1
+          ? 'text-rose-500'
+          : minutes >= 1
+            ? 'text-yellow-500'
+            : 'text-emerald-500'
+      }`}
+      title={`Observed at ${localTime} local time`}
+    >
+      {minutes} min ago
+    </div>
   )
 }
 
 export default function MetarResult({ icao, metar, status }: Props) {
   return (
-    <div className="relative pt-8">
+    <div className="pt-8">
       {status === 'loading' && <LoadingDots key={icao} />}
       {status === 'error' && <StatusText text="Could not fetch METAR." />}
       {status === 'idle' && icao.length !== 4 && (
@@ -43,9 +81,13 @@ export default function MetarResult({ icao, metar, status }: Props) {
       {status === 'idle' &&
         icao.length === 4 &&
         (metar ? (
-          <div className="text-xl whitespace-pre-wrap">
-            <MetarText icao={icao} metar={metar} />
-          </div>
+          <>
+            <div className="flex pb-4">
+              <div className="flex-1 text-sm text-main-dim">{metar.name}</div>
+              <MetarAge raw={metar.raw} />
+            </div>
+            <div className="text-xl whitespace-pre-wrap">{metar.raw}</div>
+          </>
         ) : (
           <StatusText text="No METAR available for this station." />
         ))}
