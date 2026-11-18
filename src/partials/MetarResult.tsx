@@ -57,11 +57,11 @@ function MetarAge({ raw }: { raw: string }) {
   return (
     <div
       className={`text-sm ${
-        minutes >= 1
-          ? 'text-rose-500'
-          : minutes >= 1
-            ? 'text-yellow-500'
-            : 'text-emerald-500'
+        minutes >= 61
+          ? 'text-rose-500 dark:text-rose-400'
+          : minutes >= 31
+            ? 'text-amber-500 dark:text-amber-300'
+            : 'text-green-500 dark:text-green-300'
       }`}
       title={`Observed at ${localTime} local time`}
     >
