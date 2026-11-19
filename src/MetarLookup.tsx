@@ -44,6 +44,8 @@ const FAV_KEY = 'just-metar:favourites'
 const CACHE_KEY = 'just-metar:cache'
 const LAST_KEY = 'just-metar:last'
 const MAX_FAV = 4
+const MAX_RECENT = 5
+const CACHE_TTL_MS = 120 * 60 * 1000
 const REFRESH_MS = 5 * 60 * 1000
 const isIcao = (c: unknown): c is string =>
   typeof c === 'string' && /^[A-Z]{4}$/.test(c)
@@ -67,21 +69,32 @@ function loadLast(): string {
   }
 }
 
-// last fetched report per station, kept for favourites (and the current station)
-// so they show instantly while a fresh copy loads
-type Cache = Record<string, Metar>
+// last fetched report per station so it shows instantly while a fresh copy loads.
+// Kept: all favourites (warmed on each visit) + the last MAX_RECENT other stations
+// viewed (not warmed). Entries older than CACHE_TTL_MS are never shown.
+type CacheEntry = { report: Metar; fetchedAt: number; viewedAt: number }
+type Cache = Record<string, CacheEntry>
+
+const num = (n: unknown) => (typeof n === 'number' && isFinite(n) ? n : 0)
 
 function loadCache(): Cache {
   try {
     const parsed = JSON.parse(localStorage.getItem(CACHE_KEY) ?? '{}')
     if (!parsed || typeof parsed !== 'object') return {}
     const cache: Cache = {}
-    for (const [key, m] of Object.entries(parsed as Record<string, Metar>)) {
+    for (const [key, e] of Object.entries(
+      parsed as Record<string, CacheEntry>,
+    )) {
+      const m = e?.report
       if (isIcao(key) && typeof m?.raw === 'string') {
         cache[key] = {
-          raw: m.raw,
-          name: typeof m.name === 'string' ? m.name : null,
-          taf: typeof m.taf === 'string' ? m.taf : null,
+          report: {
+            raw: m.raw,
+            name: typeof m.name === 'string' ? m.name : null,
+            taf: typeof m.taf === 'string' ? m.taf : null,
+          },
+          fetchedAt: num(e.fetchedAt),
+          viewedAt: num(e.viewedAt),
         }
       }
     }
@@ -93,12 +106,35 @@ function loadCache(): Cache {
 
 const cache = loadCache()
 
-// store a report and drop stations that are neither favourites nor current
-function cacheReport(icao: string, report: Metar, keep: string[]) {
-  cache[icao] = report
-  for (const key of Object.keys(cache)) {
-    if (key !== icao && !keep.includes(key)) delete cache[key]
+function cachedReport(icao: string): Metar | null {
+  const entry = cache[icao]
+  return entry && Date.now() - entry.fetchedAt < CACHE_TTL_MS
+    ? entry.report
+    : null
+}
+
+// store a report, then drop expired entries and recent ones beyond MAX_RECENT
+function cacheReport(
+  icao: string,
+  report: Metar,
+  favourites: string[],
+  viewed: boolean,
+) {
+  const now = Date.now()
+  cache[icao] = {
+    report,
+    fetchedAt: now,
+    viewedAt: viewed ? now : (cache[icao]?.viewedAt ?? 0),
   }
+
+  const recent = Object.keys(cache)
+    .filter((key) => !favourites.includes(key))
+    .sort((x, y) => cache[y].viewedAt - cache[x].viewedAt)
+  for (const key of recent.slice(MAX_RECENT)) delete cache[key]
+  for (const key of Object.keys(cache)) {
+    if (now - cache[key].fetchedAt >= CACHE_TTL_MS) delete cache[key]
+  }
+
   save(CACHE_KEY, JSON.stringify(cache))
 }
 
@@ -119,7 +155,7 @@ export default function MetarLookup() {
     const fromUrl = code?.toUpperCase()
     return isIcao(fromUrl) ? fromUrl : loadLast()
   })
-  const [metar, setMetar] = useState<Metar | null>(() => cache[icao] ?? null)
+  const [metar, setMetar] = useState<Metar | null>(() => cachedReport(icao))
   const [status, setStatus] = useState<Status>('idle')
   const favouritesRef = useRef(favourites)
   useEffect(() => {
@@ -132,7 +168,7 @@ export default function MetarLookup() {
     for (const code of favouritesRef.current) {
       fetchReport(code, controller.signal)
         .then((report) => {
-          if (report) cacheReport(code, report, favouritesRef.current)
+          if (report) cacheReport(code, report, favouritesRef.current, false)
         })
         .catch(() => {})
     }
@@ -167,7 +203,7 @@ export default function MetarLookup() {
       fetchReport(icao, signal)
         .then((report) => {
           if (report) {
-            cacheReport(icao, report, favouritesRef.current)
+            cacheReport(icao, report, favouritesRef.current, true)
             // only re-render when something actually changed
             setMetar((prev) => (sameReport(prev, report) ? prev : report))
             save(LAST_KEY, icao)
@@ -183,7 +219,7 @@ export default function MetarLookup() {
     }
 
     // a cached report shows right away; the fresh one replaces it if newer
-    const cached = cache[icao]
+    const cached = cachedReport(icao)
     if (cached) {
       setMetar(cached)
       setStatus('idle')
