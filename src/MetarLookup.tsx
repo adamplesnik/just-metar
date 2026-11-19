@@ -164,18 +164,44 @@ export default function MetarLookup() {
     favouritesRef.current = favourites
   }, [favourites])
 
-  // warm the cache for favourites once per visit
+  // keep every favourite warm: when any is missing or about to expire
+  // (before the next check), refetch all of them together
   useEffect(() => {
-    const controller = new AbortController()
-    for (const code of favouritesRef.current) {
-      fetchReport(code, controller.signal)
-        .then((report) => {
-          if (report) cacheReport(code, report, favouritesRef.current, false)
-        })
-        .catch(() => {})
+    let controller: AbortController | null = null
+
+    const warm = () => {
+      if (document.hidden || controller) return
+      const favs = favouritesRef.current
+      const stale = favs.some((f) => {
+        const entry = cache[f]
+        return (
+          !entry || Date.now() - entry.fetchedAt > CACHE_TTL_MS - REFRESH_MS
+        )
+      })
+      if (!stale) return
+
+      const current = new AbortController()
+      controller = current
+      Promise.allSettled(
+        favs.map((f) =>
+          fetchReport(f, current.signal).then((report) => {
+            if (report) cacheReport(f, report, favouritesRef.current, false)
+          }),
+        ),
+      ).finally(() => {
+        if (controller === current) controller = null
+      })
     }
-    return () => controller.abort()
-  }, [])
+
+    warm()
+    const interval = setInterval(warm, REFRESH_MS)
+    document.addEventListener('visibilitychange', warm)
+    return () => {
+      controller?.abort()
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', warm)
+    }
+  }, [favourites])
 
   // keep the URL in sync with a valid code
   useEffect(() => {
