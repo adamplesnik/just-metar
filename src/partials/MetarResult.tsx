@@ -10,12 +10,11 @@ export type Metar = {
   taf: string | null
 }
 
-// one change group per line: FM, BECMG, TEMPO and PROB start a new line
-function formatTaf(raw: string) {
+// one change group per row: FM, BECMG, TEMPO and PROB start a new row (PROB TEMPO stays together)
+function tafRows(raw: string) {
   return raw
     .trim()
-    .replace(/\s+(?=(FM\d{6}|BECMG|TEMPO|PROB\d{2})\b)/g, '\n  ')
-    .replace(/\n {2}(PROB\d{2})\n {2}(TEMPO)/g, '\n  $1 $2')
+    .split(/(?<!PROB\d{2})\s+(?=(?:FM\d{6}|BECMG|TEMPO|PROB\d{2})\b)/)
 }
 
 type Props = {
@@ -97,8 +96,12 @@ export default function MetarResult({ icao, metar, status }: Props) {
             </div>
             <div className="text-xl whitespace-pre-wrap">{metar.raw}</div>
             {metar.taf && (
-              <div className="pt-6 text-sm whitespace-pre-wrap text-main-dim">
-                {formatTaf(metar.taf)}
+              <div className="pt-6 text-sm text-main-dim">
+                {tafRows(metar.taf).map((row, i) => (
+                  <div key={i} className="pb-1">
+                    {row}
+                  </div>
+                ))}
               </div>
             )}
           </>
