@@ -21,6 +21,7 @@ type Props = {
   icao: string
   metar: Metar | null
   status: Status
+  refreshing: boolean
 }
 
 // observation time from the "DDHHMMZ" group (UTC), resolved against the user's clock
@@ -42,7 +43,7 @@ function observationTime(raw: string, now: Date): Date | null {
   return new Date(obs)
 }
 
-function MetarAge({ raw }: { raw: string }) {
+function MetarAge({ raw, refreshing }: { raw: string; refreshing: boolean }) {
   const [now, setNow] = useState(() => new Date())
 
   useEffect(() => {
@@ -63,22 +64,47 @@ function MetarAge({ raw }: { raw: string }) {
   })
 
   return (
-    <div
-      className={`label-sm ${
-        minutes >= 61
-          ? 'text-red'
-          : minutes >= 31
-            ? 'text-orange'
-            : 'text-green'
-      }`}
-      title={`Observed at ${localTime} local time`}
-    >
-      {minutes} min ago
+    <div className="flex items-center gap-1">
+      {refreshing && (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="w-3 animate-[spin_1.5s_ease-in-out_infinite] text-main-dim"
+          role="img"
+          aria-label="Checking for a newer report"
+        >
+          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+        </svg>
+      )}
+      <div
+        className={`label-sm ${
+          minutes >= 61
+            ? 'text-red'
+            : minutes >= 31
+              ? 'text-orange'
+              : 'text-green'
+        }`}
+        title={`Observed at ${localTime} local time`}
+      >
+        {minutes} min ago
+      </div>
     </div>
   )
 }
 
-export default function MetarResult({ icao, metar, status }: Props) {
+export default function MetarResult({
+  icao,
+  metar,
+  status,
+  refreshing,
+}: Props) {
   return (
     <div className="pt-8">
       {status === 'loading' && <LoadingDots key={icao} />}
@@ -92,7 +118,7 @@ export default function MetarResult({ icao, metar, status }: Props) {
           <>
             <div className="flex pb-4">
               <div className="flex-1 label-sm text-main-dim">{metar.name}</div>
-              <MetarAge raw={metar.raw} />
+              <MetarAge raw={metar.raw} refreshing={refreshing} />
             </div>
             <div className="copy-lg whitespace-pre-wrap">{metar.raw}</div>
             {metar.taf && (

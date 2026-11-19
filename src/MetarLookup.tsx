@@ -157,6 +157,8 @@ export default function MetarLookup() {
   })
   const [metar, setMetar] = useState<Metar | null>(() => cachedReport(icao))
   const [status, setStatus] = useState<Status>('idle')
+  // a background fetch is in flight while a report is already shown
+  const [refreshing, setRefreshing] = useState(false)
   const favouritesRef = useRef(favourites)
   useEffect(() => {
     favouritesRef.current = favourites
@@ -186,6 +188,7 @@ export default function MetarLookup() {
     if (!/^[A-Z]{4}$/.test(icao)) {
       setMetar(null)
       setStatus('idle')
+      setRefreshing(false)
       return
     }
 
@@ -199,6 +202,7 @@ export default function MetarLookup() {
       const { signal } = controller
       lastFetch = Date.now()
       if (!background) setStatus('loading')
+      setRefreshing(background)
 
       fetchReport(icao, signal)
         .then((report) => {
@@ -211,10 +215,13 @@ export default function MetarLookup() {
             setMetar(null)
           }
           setStatus('idle')
+          setRefreshing(false)
         })
         .catch((err) => {
-          if (err.name === 'AbortError' || background) return
-          setStatus('error')
+          // an aborted load was replaced by a newer one, which owns the state
+          if (err.name === 'AbortError') return
+          setRefreshing(false)
+          if (!background) setStatus('error')
         })
     }
 
@@ -255,7 +262,12 @@ export default function MetarLookup() {
 
   return (
     <>
-      <MetarResult icao={icao} metar={metar} status={status} />
+      <MetarResult
+        icao={icao}
+        metar={metar}
+        status={status}
+        refreshing={refreshing}
+      />
       <div className="flex flex-col gap-2">
         <IcaoInput value={icao} onChange={setIcao}>
           <FavouriteToggle
