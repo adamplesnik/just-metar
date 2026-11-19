@@ -4,7 +4,7 @@ import Header from './partials/Header'
 
 function App() {
   return (
-    <main className="mx-auto flex min-h-svh max-w-md flex-col px-4 py-8">
+    <main className="mx-auto flex min-h-svh max-w-md flex-col p-4">
       <Header />
       <div className="flex flex-1 flex-col justify-between">
         <Routes>

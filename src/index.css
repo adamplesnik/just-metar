@@ -3,12 +3,15 @@
 
 @theme {
   --color-background: light-dark(#fafafa, #1b1d1d);
-  --color-container-dim: light-dark(#f5f5f5, #232323);
-  --color-container: light-dark(#e5e5e5, #363636);
-  --color-container-bright: light-dark(#d9d9d9, #454545);
-  --color-outline: light-dark(#cfcfcf, #515659);
-  --color-main-dim: light-dark(#808080, #9d9d9d);
-  --color-main: light-dark(#2b2b2b, #ececec);
+  --color-container: light-dark(#ededed, #3d4245);
+  --color-container-bright: light-dark(#e0e0e0, #555c5e);
+  --color-outline: light-dark(#d4d4d4, #464c4f);
+  --color-main-dim: light-dark(#808080, #999999);
+  --color-main: light-dark(#2b2b2b, #f0f0f0);
+
+  --color-red: light-dark(#ff2056, #ff637e);
+  --color-orange: light-dark(#fe9a00, #ffd230);
+  --color-green: light-dark(#00c950, #7bf1a8);
 }
 
 /* light-dark() needs this to follow the system theme */

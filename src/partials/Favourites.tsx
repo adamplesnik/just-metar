@@ -16,7 +16,7 @@ export default function Favourites({ codes, slots, active, onSelect }: Props) {
           type="button"
           onClick={() => onSelect(code)}
           className={`h-8 flex-1 cursor-pointer rounded-xl px-2 py-1 transition-colors hover:bg-container-bright hover:text-main sm:px-3 ${
-            code === active ? 'bg-container' : 'bg-container-dim'
+            code === active ? 'bg-container' : ''
           }`}
         >
           {code}
