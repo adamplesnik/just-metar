@@ -64,7 +64,7 @@ function MetarAge({ raw }: { raw: string }) {
 
   return (
     <div
-      className={`text-sm ${
+      className={`label-sm ${
         minutes >= 61
           ? 'text-red'
           : minutes >= 31
@@ -91,12 +91,12 @@ export default function MetarResult({ icao, metar, status }: Props) {
         (metar ? (
           <>
             <div className="flex pb-4">
-              <div className="flex-1 text-sm text-main-dim">{metar.name}</div>
+              <div className="flex-1 label-sm text-main-dim">{metar.name}</div>
               <MetarAge raw={metar.raw} />
             </div>
-            <div className="text-xl whitespace-pre-wrap">{metar.raw}</div>
+            <div className="copy-lg whitespace-pre-wrap">{metar.raw}</div>
             {metar.taf && (
-              <div className="pt-6 text-sm text-main-dim">
+              <div className="pt-6 copy-md text-main-dim">
                 {tafRows(metar.taf).map((row, i) => (
                   <div key={i} className="pb-1">
                     {row}

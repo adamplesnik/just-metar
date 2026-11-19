@@ -15,7 +15,7 @@ export default function FavouriteToggle({
 
   return (
     <label
-      className={`flex h-8 items-center gap-2 rounded-lg px-2 py-1 text-xs text-main-dim uppercase ${
+      className={`flex h-8 items-center gap-2 rounded-lg px-2 py-1 label-sm text-main-dim ${
         disabled
           ? 'cursor-not-allowed opacity-30'
           : 'cursor-pointer hover:bg-container-bright hover:text-main'
