@@ -9,13 +9,13 @@ export default function Favourites({ codes, slots, active, onSelect }: Props) {
   const empty = Math.max(0, slots - codes.length)
 
   return (
-    <div className="flex items-center gap-1 rounded-md border border-outline p-1">
+    <div className="flex items-center gap-1">
       {codes.map((code) => (
         <button
           key={code}
           type="button"
           onClick={() => onSelect(code)}
-          className={`h-8 flex-1 cursor-pointer rounded px-2 py-1 transition-colors hover:bg-container-bright hover:text-main sm:px-3 ${
+          className={`h-8 flex-1 cursor-pointer rounded-xl px-2 py-1 transition-colors hover:bg-container-bright hover:text-main sm:px-3 ${
             code === active ? 'bg-container' : 'bg-container-dim'
           }`}
         >
