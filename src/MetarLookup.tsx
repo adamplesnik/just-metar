@@ -137,9 +137,17 @@ function pruneCache(favourites: string[]) {
 }
 
 // store a favourite's report; other stations are ignored
-function cacheReport(icao: string, report: Metar, favourites: string[]) {
+// requestedAt is when the request started: a response from an older request
+// that finishes late never replaces a newer one
+function cacheReport(
+  icao: string,
+  report: Metar,
+  favourites: string[],
+  requestedAt: number,
+) {
   if (!favourites.includes(icao)) return
-  cache[icao] = { report, fetchedAt: Date.now() }
+  if ((cache[icao]?.fetchedAt ?? 0) > requestedAt) return
+  cache[icao] = { report, fetchedAt: requestedAt }
   pruneCache(favourites)
 }
 
@@ -168,15 +176,20 @@ export default function MetarLookup() {
   useEffect(() => {
     favouritesRef.current = favourites
   }, [favourites])
+  const icaoRef = useRef(icao)
+  useEffect(() => {
+    icaoRef.current = icao
+  }, [icao])
 
   // keep every favourite warm: when any is missing or about to expire
-  // (before the next check), refetch all of them together
+  // (before the next check), refetch all of them together. The station on
+  // screen is skipped: its own lookup below keeps it fresh.
   useEffect(() => {
     let controller: AbortController | null = null
 
     const warm = () => {
       if (document.hidden || controller) return
-      const favs = favouritesRef.current
+      const favs = favouritesRef.current.filter((f) => f !== icaoRef.current)
       const stale = favs.some((f) => {
         const entry = cache[f]
         return (
@@ -187,11 +200,12 @@ export default function MetarLookup() {
 
       const current = new AbortController()
       controller = current
+      const requestedAt = Date.now()
       fetchReports(favs, current.signal)
         .then((reports) => {
           for (const [f, report] of Object.entries(reports)) {
             if (favs.includes(f))
-              cacheReport(f, report, favouritesRef.current)
+              cacheReport(f, report, favouritesRef.current, requestedAt)
           }
         })
         .catch(() => {
@@ -235,14 +249,15 @@ export default function MetarLookup() {
       controller.abort()
       controller = new AbortController()
       const { signal } = controller
-      lastFetch = Date.now()
+      const requestedAt = Date.now()
+      lastFetch = requestedAt
       if (!background) setStatus('loading')
       setRefreshing(background)
 
       fetchReport(icao, signal)
         .then((report) => {
           if (report) {
-            cacheReport(icao, report, favouritesRef.current)
+            cacheReport(icao, report, favouritesRef.current, requestedAt)
             // only re-render when something actually changed
             setMetar((prev) => (sameReport(prev, report) ? prev : report))
             save(LAST_KEY, icao)
