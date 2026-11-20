@@ -42,10 +42,6 @@ async function fetchReports(
   return reports
 }
 
-// METAR + TAF for one station; null when the station has no METAR
-const fetchReport = (icao: string, signal: AbortSignal) =>
-  fetchReports([icao], signal).then((reports) => reports[icao] ?? null)
-
 const sameReport = (a: Metar | null, b: Metar | null) =>
   a?.raw === b?.raw && a?.taf === b?.taf && a?.name === b?.name
 
@@ -53,7 +49,6 @@ const FAV_KEY = 'just-metar:favourites'
 const CACHE_KEY = 'just-metar:cache'
 const LAST_KEY = 'just-metar:last'
 const MAX_FAV = 4
-const CACHE_TTL_MS = 120 * 60 * 1000
 const REFRESH_MS = 5 * 60 * 1000
 const isIcao = (c: unknown): c is string =>
   typeof c === 'string' && /^[A-Z]{4}$/.test(c)
@@ -77,9 +72,9 @@ function loadLast(): string {
   }
 }
 
-// last fetched report per favourite so it shows instantly while a fresh copy
-// loads; other stations are never stored. Entries older than CACHE_TTL_MS are
-// never shown.
+// latest report per favourite so it shows instantly while a fresh copy loads;
+// other stations are never stored. Its age is shown next to it, so an old
+// entry is still worth showing.
 type CacheEntry = { report: Metar; fetchedAt: number }
 type Cache = Record<string, CacheEntry>
 
@@ -115,39 +110,29 @@ const cache = readCache()
 // clear out anything stored before only favourites were kept
 pruneCache(loadFavourites())
 
-function cachedReport(icao: string): Metar | null {
-  const entry = cache[icao]
-  return entry && Date.now() - entry.fetchedAt < CACHE_TTL_MS
-    ? entry.report
-    : null
-}
+const cachedReport = (icao: string): Metar | null =>
+  cache[icao]?.report ?? null
 
-// drop non-favourite and expired entries, then persist
+// drop non-favourite entries, then persist
 function pruneCache(favourites: string[]) {
-  const now = Date.now()
   for (const key of Object.keys(cache)) {
-    if (
-      !favourites.includes(key) ||
-      now - cache[key].fetchedAt >= CACHE_TTL_MS
-    ) {
-      delete cache[key]
-    }
+    if (!favourites.includes(key)) delete cache[key]
   }
   save(CACHE_KEY, JSON.stringify(cache))
 }
 
-// store a favourite's report; other stations are ignored
+// store the favourites' reports; other stations are ignored.
 // requestedAt is when the request started: a response from an older request
 // that finishes late never replaces a newer one
-function cacheReport(
-  icao: string,
-  report: Metar,
+function cacheReports(
+  reports: Record<string, Metar>,
   favourites: string[],
   requestedAt: number,
 ) {
-  if (!favourites.includes(icao)) return
-  if ((cache[icao]?.fetchedAt ?? 0) > requestedAt) return
-  cache[icao] = { report, fetchedAt: requestedAt }
+  for (const [icao, report] of Object.entries(reports)) {
+    if ((cache[icao]?.fetchedAt ?? -1) > requestedAt) continue
+    cache[icao] = { report, fetchedAt: requestedAt }
+  }
   pruneCache(favourites)
 }
 
@@ -176,55 +161,9 @@ export default function MetarLookup() {
   useEffect(() => {
     favouritesRef.current = favourites
   }, [favourites])
-  const icaoRef = useRef(icao)
-  useEffect(() => {
-    icaoRef.current = icao
-  }, [icao])
-
-  // keep every favourite warm: when any is missing or about to expire
-  // (before the next check), refetch all of them together. The station on
-  // screen is skipped: its own lookup below keeps it fresh.
-  useEffect(() => {
-    let controller: AbortController | null = null
-
-    const warm = () => {
-      if (document.hidden || controller) return
-      const favs = favouritesRef.current.filter((f) => f !== icaoRef.current)
-      const stale = favs.some((f) => {
-        const entry = cache[f]
-        return (
-          !entry || Date.now() - entry.fetchedAt > CACHE_TTL_MS - REFRESH_MS
-        )
-      })
-      if (!stale) return
-
-      const current = new AbortController()
-      controller = current
-      const requestedAt = Date.now()
-      fetchReports(favs, current.signal)
-        .then((reports) => {
-          for (const [f, report] of Object.entries(reports)) {
-            if (favs.includes(f))
-              cacheReport(f, report, favouritesRef.current, requestedAt)
-          }
-        })
-        .catch(() => {
-          // warming is best effort; the next check retries
-        })
-        .finally(() => {
-          if (controller === current) controller = null
-        })
-    }
-
-    warm()
-    const interval = setInterval(warm, REFRESH_MS)
-    document.addEventListener('visibilitychange', warm)
-    return () => {
-      controller?.abort()
-      clearInterval(interval)
-      document.removeEventListener('visibilitychange', warm)
-    }
-  }, [favourites])
+  // favourites are fetched once per page load, in the same request as the
+  // first lookup (or on their own when there is nothing to look up yet)
+  const favouritesPending = useRef(true)
 
   // keep the URL in sync with a valid code
   useEffect(() => {
@@ -234,14 +173,28 @@ export default function MetarLookup() {
   }, [icao, code, navigate])
 
   useEffect(() => {
-    if (!/^[A-Z]{4}$/.test(icao)) {
+    let controller = new AbortController()
+
+    if (!isIcao(icao)) {
       setMetar(null)
       setStatus('idle')
       setRefreshing(false)
-      return
+
+      const favs = favouritesRef.current
+      if (favouritesPending.current && favs.length) {
+        const requestedAt = Date.now()
+        fetchReports(favs, controller.signal)
+          .then((reports) => {
+            cacheReports(reports, favouritesRef.current, requestedAt)
+            favouritesPending.current = false
+          })
+          .catch(() => {
+            // retried with the next lookup
+          })
+      }
+      return () => controller.abort()
     }
 
-    let controller = new AbortController()
     let lastFetch = 0
 
     // background loads keep the shown report and ignore failures
@@ -254,10 +207,17 @@ export default function MetarLookup() {
       if (!background) setStatus('loading')
       setRefreshing(background)
 
-      fetchReport(icao, signal)
-        .then((report) => {
+      const withFavourites = favouritesPending.current
+      const ids = withFavourites
+        ? [...new Set([icao, ...favouritesRef.current])]
+        : [icao]
+
+      fetchReports(ids, signal)
+        .then((reports) => {
+          cacheReports(reports, favouritesRef.current, requestedAt)
+          if (withFavourites) favouritesPending.current = false
+          const report = reports[icao]
           if (report) {
-            cacheReport(icao, report, favouritesRef.current, requestedAt)
             // only re-render when something actually changed
             setMetar((prev) => (sameReport(prev, report) ? prev : report))
             save(LAST_KEY, icao)
@@ -325,7 +285,12 @@ export default function MetarLookup() {
           <FavouriteToggle
             isFavourite={isFavourite}
             canAdd={isValid && !isFull}
-            onAdd={() => updateFavourites([...favourites, icao])}
+            onAdd={() => {
+              const next = [...favourites, icao]
+              updateFavourites(next)
+              // keep the report already on screen; any fetch replaces it
+              if (metar) cacheReports({ [icao]: metar }, next, -1)
+            }}
             onRemove={() =>
               updateFavourites(favourites.filter((c) => c !== icao))
             }
