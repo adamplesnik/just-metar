@@ -85,9 +85,9 @@ function MetarAge({ raw, refreshing }: { raw: string; refreshing: boolean }) {
       )}
       <div
         className={`label-sm ${
-          minutes >= 61
+          minutes >= 90
             ? 'text-red'
-            : minutes >= 31
+            : minutes >= 60
               ? 'text-orange'
               : 'text-green'
         }`}
