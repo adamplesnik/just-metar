@@ -53,7 +53,6 @@ const FAV_KEY = 'just-metar:favourites'
 const CACHE_KEY = 'just-metar:cache'
 const LAST_KEY = 'just-metar:last'
 const MAX_FAV = 4
-const MAX_RECENT = 5
 const CACHE_TTL_MS = 120 * 60 * 1000
 const REFRESH_MS = 5 * 60 * 1000
 const isIcao = (c: unknown): c is string =>
@@ -78,15 +77,15 @@ function loadLast(): string {
   }
 }
 
-// last fetched report per station so it shows instantly while a fresh copy loads.
-// Kept: all favourites (warmed on each visit) + the last MAX_RECENT other stations
-// viewed (not warmed). Entries older than CACHE_TTL_MS are never shown.
-type CacheEntry = { report: Metar; fetchedAt: number; viewedAt: number }
+// last fetched report per favourite so it shows instantly while a fresh copy
+// loads; other stations are never stored. Entries older than CACHE_TTL_MS are
+// never shown.
+type CacheEntry = { report: Metar; fetchedAt: number }
 type Cache = Record<string, CacheEntry>
 
 const num = (n: unknown) => (typeof n === 'number' && isFinite(n) ? n : 0)
 
-function loadCache(): Cache {
+function readCache(): Cache {
   try {
     const parsed = JSON.parse(localStorage.getItem(CACHE_KEY) ?? '{}')
     if (!parsed || typeof parsed !== 'object') return {}
@@ -103,7 +102,6 @@ function loadCache(): Cache {
             taf: typeof m.taf === 'string' ? m.taf : null,
           },
           fetchedAt: num(e.fetchedAt),
-          viewedAt: num(e.viewedAt),
         }
       }
     }
@@ -113,7 +111,9 @@ function loadCache(): Cache {
   }
 }
 
-const cache = loadCache()
+const cache = readCache()
+// clear out anything stored before only favourites were kept
+pruneCache(loadFavourites())
 
 function cachedReport(icao: string): Metar | null {
   const entry = cache[icao]
@@ -122,29 +122,25 @@ function cachedReport(icao: string): Metar | null {
     : null
 }
 
-// store a report, then drop expired entries and recent ones beyond MAX_RECENT
-function cacheReport(
-  icao: string,
-  report: Metar,
-  favourites: string[],
-  viewed: boolean,
-) {
+// drop non-favourite and expired entries, then persist
+function pruneCache(favourites: string[]) {
   const now = Date.now()
-  cache[icao] = {
-    report,
-    fetchedAt: now,
-    viewedAt: viewed ? now : (cache[icao]?.viewedAt ?? 0),
-  }
-
-  const recent = Object.keys(cache)
-    .filter((key) => !favourites.includes(key))
-    .sort((x, y) => cache[y].viewedAt - cache[x].viewedAt)
-  for (const key of recent.slice(MAX_RECENT)) delete cache[key]
   for (const key of Object.keys(cache)) {
-    if (now - cache[key].fetchedAt >= CACHE_TTL_MS) delete cache[key]
+    if (
+      !favourites.includes(key) ||
+      now - cache[key].fetchedAt >= CACHE_TTL_MS
+    ) {
+      delete cache[key]
+    }
   }
-
   save(CACHE_KEY, JSON.stringify(cache))
+}
+
+// store a favourite's report; other stations are ignored
+function cacheReport(icao: string, report: Metar, favourites: string[]) {
+  if (!favourites.includes(icao)) return
+  cache[icao] = { report, fetchedAt: Date.now() }
+  pruneCache(favourites)
 }
 
 function save(key: string, value: string) {
@@ -195,7 +191,7 @@ export default function MetarLookup() {
         .then((reports) => {
           for (const [f, report] of Object.entries(reports)) {
             if (favs.includes(f))
-              cacheReport(f, report, favouritesRef.current, false)
+              cacheReport(f, report, favouritesRef.current)
           }
         })
         .catch(() => {
@@ -246,7 +242,7 @@ export default function MetarLookup() {
       fetchReport(icao, signal)
         .then((report) => {
           if (report) {
-            cacheReport(icao, report, favouritesRef.current, true)
+            cacheReport(icao, report, favouritesRef.current)
             // only re-render when something actually changed
             setMetar((prev) => (sameReport(prev, report) ? prev : report))
             save(LAST_KEY, icao)
@@ -293,6 +289,8 @@ export default function MetarLookup() {
     const sorted = [...next].sort()
     setFavourites(sorted)
     save(FAV_KEY, JSON.stringify(sorted))
+    // a removed favourite's report leaves storage too
+    pruneCache(sorted)
   }
 
   const isValid = isIcao(icao)
