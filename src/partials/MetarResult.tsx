@@ -65,24 +65,26 @@ function MetarAge({ raw, refreshing }: { raw: string; refreshing: boolean }) {
 
   return (
     <div className="flex items-center gap-1">
-      {refreshing && (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="w-3 animate-[spin_1.5s_ease-in-out_infinite] text-main-dim"
-          role="img"
-          aria-label="Checking for a newer report"
-        >
-          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-        </svg>
-      )}
+      {/* always rendered so it can fade in and out while still spinning */}
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={`w-3 animate-[spin_1.5s_ease-in-out_infinite] text-main-dim transition-opacity duration-300 ${
+          refreshing ? 'opacity-100' : 'opacity-0'
+        }`}
+        role="img"
+        aria-label="Checking for a newer report"
+        aria-hidden={!refreshing}
+      >
+        <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+      </svg>
       <div
         className={`label-sm ${
           minutes >= 90
