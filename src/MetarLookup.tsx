@@ -5,37 +5,46 @@ import MetarResult, { type Metar, type Status } from './partials/MetarResult'
 import Favourites from './partials/Favourites'
 import FavouriteToggle from './partials/FavouriteToggle'
 
-const METAR_URL = (icao: string) => `/api/data/metar?ids=${icao}&format=json`
-const TAF_URL = (icao: string) => `/api/data/taf?ids=${icao}&format=json`
+// METAR with its TAF attached, for any number of stations in one request
+const REPORTS_URL = (icaos: string[]) =>
+  `/api/data/metar?ids=${icaos.join(',')}&format=json&taf=true`
 
-// 204 = no report for this station
-const fetchJson = (url: string, signal: AbortSignal) =>
-  fetch(url, { signal }).then((res) => {
-    if (!res.ok) throw new Error(String(res.status))
-    return res.status === 204 ? [] : res.json()
-  })
+type ApiReport = {
+  icaoId?: string
+  rawOb?: string
+  name?: string
+  rawTaf?: string
+}
+
+// reports keyed by station; stations without a METAR are missing.
+// The API does not keep the requested order, so match on icaoId.
+async function fetchReports(
+  icaos: string[],
+  signal: AbortSignal,
+): Promise<Record<string, Metar>> {
+  const res = await fetch(REPORTS_URL(icaos), { signal })
+  if (!res.ok) throw new Error(String(res.status))
+  // 204 = no report for any of the stations
+  const data: unknown = res.status === 204 ? [] : await res.json()
+
+  const reports: Record<string, Metar> = {}
+  if (!Array.isArray(data)) return reports
+  for (const r of data as ApiReport[]) {
+    const id = r?.icaoId
+    // first entry per station is the latest
+    if (!isIcao(id) || !r.rawOb || reports[id]) continue
+    reports[id] = {
+      raw: r.rawOb,
+      name: r.name ?? null,
+      taf: r.rawTaf ?? null,
+    }
+  }
+  return reports
+}
 
 // METAR + TAF for one station; null when the station has no METAR
-async function fetchReport(
-  icao: string,
-  signal: AbortSignal,
-): Promise<Metar | null> {
-  // a missing TAF must not hide the METAR
-  const taf = fetchJson(TAF_URL(icao), signal)
-    .then((data: { rawTAF?: string }[]) =>
-      Array.isArray(data) ? (data[0]?.rawTAF ?? null) : null,
-    )
-    .catch((err) => {
-      if (err.name === 'AbortError') throw err
-      return null
-    })
-
-  const [data, rawTaf]: [{ rawOb?: string; name?: string }[], string | null] =
-    await Promise.all([fetchJson(METAR_URL(icao), signal), taf])
-  const report = Array.isArray(data) ? data[0] : undefined
-  if (!report?.rawOb) return null
-  return { raw: report.rawOb, name: report.name ?? null, taf: rawTaf }
-}
+const fetchReport = (icao: string, signal: AbortSignal) =>
+  fetchReports([icao], signal).then((reports) => reports[icao] ?? null)
 
 const sameReport = (a: Metar | null, b: Metar | null) =>
   a?.raw === b?.raw && a?.taf === b?.taf && a?.name === b?.name
@@ -182,15 +191,19 @@ export default function MetarLookup() {
 
       const current = new AbortController()
       controller = current
-      Promise.allSettled(
-        favs.map((f) =>
-          fetchReport(f, current.signal).then((report) => {
-            if (report) cacheReport(f, report, favouritesRef.current, false)
-          }),
-        ),
-      ).finally(() => {
-        if (controller === current) controller = null
-      })
+      fetchReports(favs, current.signal)
+        .then((reports) => {
+          for (const [f, report] of Object.entries(reports)) {
+            if (favs.includes(f))
+              cacheReport(f, report, favouritesRef.current, false)
+          }
+        })
+        .catch(() => {
+          // warming is best effort; the next check retries
+        })
+        .finally(() => {
+          if (controller === current) controller = null
+        })
     }
 
     warm()
