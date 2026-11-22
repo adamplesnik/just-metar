@@ -63,6 +63,11 @@ function loadFavourites(): string[] {
   }
 }
 
+// running as the installed PWA (navigator.standalone is iOS only)
+const isStandalone = () =>
+  window.matchMedia('(display-mode: standalone)').matches ||
+  (navigator as Navigator & { standalone?: boolean }).standalone === true
+
 function loadLast(): string {
   try {
     const last = localStorage.getItem(LAST_KEY)
@@ -110,8 +115,7 @@ const cache = readCache()
 // clear out anything stored before only favourites were kept
 pruneCache(loadFavourites())
 
-const cachedReport = (icao: string): Metar | null =>
-  cache[icao]?.report ?? null
+const cachedReport = (icao: string): Metar | null => cache[icao]?.report ?? null
 
 // drop non-favourite entries, then persist
 function pruneCache(favourites: string[]) {
@@ -148,10 +152,14 @@ export default function MetarLookup() {
   const [favourites, setFavourites] = useState(loadFavourites)
   const { code } = useParams()
   const navigate = useNavigate()
-  // URL code wins over the last remembered one
+  // in the browser the URL code wins over the last remembered one; the
+  // installed app always reopens the last station, whatever URL it launched
+  // with (iOS keeps the URL of the page it was added from)
   const [icao, setIcao] = useState(() => {
     const fromUrl = code?.toUpperCase()
-    return isIcao(fromUrl) ? fromUrl : loadLast()
+    const last = loadLast()
+    if (isStandalone() && last) return last
+    return isIcao(fromUrl) ? fromUrl : last
   })
   const [metar, setMetar] = useState<Metar | null>(() => cachedReport(icao))
   const [status, setStatus] = useState<Status>('idle')
