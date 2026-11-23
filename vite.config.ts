@@ -18,7 +18,7 @@ export default defineConfig({
       ],
       manifest: {
         name: 'JUST METAR',
-        short_name: 'METAR',
+        short_name: 'JUST METAR',
         description: 'Latest METAR and TAF for any airport.',
         start_url: '/',
         scope: '/',
